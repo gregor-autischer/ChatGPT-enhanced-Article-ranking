@@ -47,11 +47,11 @@ def extend_search_term_with_gpt(search_term_string):
     
     except openai.OpenAIError as e:
         print(f"An OpenAI error occurred: {str(e)}")
-        return
+        sys.exit("Stopping the program due to error.")
 
     except Exception as e:
         print(f"An unexpected error occurred: {str(e)}")
-        return
+        sys.exit("Stopping the program due to error.")
 
     return additional_words_string
 
