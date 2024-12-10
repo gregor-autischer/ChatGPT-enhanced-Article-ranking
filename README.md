@@ -1,3 +1,5 @@
-# CO2-24h-Prediction
+# Article Ranking with ChatGPT extension
 
-## Getting the Data
+## Getting and preparing the Data
+
+## ChatGPT integration
