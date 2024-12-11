@@ -27,6 +27,10 @@ def main():
     print(search_term)
     print(search_term_extended)
 
+    # TODO: Maybe? filter out filler words. I dont know if required?
+
+    # TODO: use search_term and search_term_extended to rank articles
+
 def extend_search_term_with_gpt(search_term_string):
     # ChatGPT integration
 
