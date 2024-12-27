@@ -142,7 +142,7 @@ def evaluate(df, top_results):
 
 
     plt.figure(figsize=(10, 6))
-    plt.barh(top_results['text'], top_results['bm25_score'], color='skyblue')
+    plt.barh(top_results['content'], top_results['bm25_score'], color='skyblue')
     plt.xlabel('BM25 Score')
     plt.ylabel('Document')
     plt.title('Top Ranked Documents')
