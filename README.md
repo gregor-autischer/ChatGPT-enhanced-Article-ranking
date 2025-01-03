@@ -66,14 +66,14 @@ python -m venv env
 
 #### Activate the Virtual Environment
 
-- **Windows**:
-  ```powershell
-  .\env\Scripts\activate
-  ```
-
-- **Mac/Linux**:
+#### Mac and Linux
   ```bash
   source env/bin/activate
+  ```
+
+#### Windows
+  ```powershell
+  .\env\Scripts\activate
   ```
 
 #### Deactivate the Virtual Environment
