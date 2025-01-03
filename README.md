@@ -4,12 +4,12 @@
 
 ## ChatGPT integration
 Do this in your environment:
-To make the ChatGPT integration work:
+To make the ChatGPT integration work (Mac and Linux):
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
 ```
 
-## Using venv
+## Using venv (Mac and Linux)
 To create virtual environment the first time use:
 ```bash
 python -m venv env

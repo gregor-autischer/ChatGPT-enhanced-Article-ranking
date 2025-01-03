@@ -7,12 +7,14 @@ import json
 import pandas as pd
 import re
 import os
-import nltk
 import matplotlib.pyplot as plt
+
+import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 from rank_bm25 import BM25Okapi
+
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
@@ -56,7 +58,7 @@ def extend_search_term_with_gpt(search_term_string):
     try:
         client = OpenAI()
         completion = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
                 {"role": "system", "content": gpt_system_content},
                 {"role": "user", "content": gpt_user_content}
@@ -92,7 +94,7 @@ def preprocess(content):
 
 
 def model_bm25():
-    data = 'data\dataset.jsonl' 
+    data = os.path.join('data', 'dataset.jsonl')
 
     documents = []
     with open(data, 'r') as f:
@@ -100,9 +102,11 @@ def model_bm25():
             documents.append(json.loads(line))
 
     df = pd.DataFrame(documents)
+    print("Below is the overview of the initial data:")
     print(df.head())  # check data is read correctly
+
     df['processed_text'] = df['content'].apply(preprocess) #preprocessed data
-    print("Below is the preprocessed data")
+    print("Below is the overview of the preprocessed data")
     print(df.head())
 
     tokenized_corpus = [doc.split() for doc in df['processed_text']] #tokenize
@@ -148,18 +152,20 @@ def evaluate(df, top_results):
     plt.title('Top Ranked Documents')
     plt.show()
 
+def check_api_key():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if api_key:
+        print(f"OPENAI_API_KEY is set: {api_key[:5]}...")  # Print the first few characters for confirmation
+    else:
+        print("OPENAI_API_KEY is not set.")
+
 if __name__ == "__main__":
     nltk.download('punkt')
     nltk.download('punkt_tab')
     nltk.download('stopwords')
 
-    model_bm25()
-    '''
-    api_key = os.getenv("OPENAI_API_KEY")
-    if api_key:
-        print(f"OPENAI_API_KEY is set: {api_key[:5]}...")  # Print the first few characters for confirmation
-    else:
-        print("OPENAI_API_KEY is not set.")'''
-    #check = extend_search_term_with_gpt('test')
+    check_api_key()
 
-    #print(os.getenv("OPENAI_API_KEY"))
+    model_bm25()
+    
+    

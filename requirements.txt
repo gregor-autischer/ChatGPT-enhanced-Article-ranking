@@ -1,3 +1,6 @@
 openai
-nltk.download('punkt')
-nltk.download('stopwords')
+pandas
+matplotlib
+nltk
+rank-bm25
+scikit-learn
