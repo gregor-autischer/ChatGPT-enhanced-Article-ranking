@@ -18,6 +18,10 @@ from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
+DATA_FOLDER = "data"
+RAW_DATASET = "dataset.jsonl"
+PREPROCESSED_DATASET = "preprocessed_dataset.jsonl"
+
 
 def user_search_term(term):
     # Check if search term is passed
@@ -78,34 +82,34 @@ def extend_search_term_with_gpt(search_term_string):
 
 def preprocess(content):
     content = re.sub(r'[^\w\s]', '', content.lower())  # Remove punctuation and lowercase
-
-    '''if not os.path.exists(nltk.data.find('tokenizers/punkt')):
-        nltk.download('punkt')
-    if not os.path.exists(nltk.data.find('tokenizers/stopwords')):
-        nltk.download('punkt')
-    nltk.download('punkt')
-    nltk.download('stopwords')'''
-
     tokens = word_tokenize(content)
     tokens = [word for word in tokens if word not in stopwords.words('english')]  # Remove stopwords
     stemmer = PorterStemmer()
     tokens = [stemmer.stem(word) for word in tokens]  # Stemming
     return ' '.join(tokens)
 
-
-def model_bm25():
-    data = os.path.join('data', 'dataset.jsonl')
-
+def preprocess_and_save(input_path, output_path):
+    print("Preprocessing data...")
     documents = []
-    with open(data, 'r') as f:
+    with open(input_path, 'r') as infile:
+        for line in infile:
+            doc = json.loads(line)
+            doc['processed_text'] = preprocess(doc['content'])  # Add preprocessed text
+            documents.append(doc)
+
+    with open(output_path, 'w') as outfile:
+        for doc in documents:
+            json.dump(doc, outfile)
+            outfile.write('\n')  # Ensure newline-separated JSON
+
+def model_bm25(preprocessed_file):
+    documents = []
+    with open(preprocessed_file, 'r') as f:
         for line in f:
             documents.append(json.loads(line))
 
     df = pd.DataFrame(documents)
-    print("Below is the overview of the initial data:")
-    print(df.head())  # check data is read correctly
 
-    df['processed_text'] = df['content'].apply(preprocess) #preprocessed data
     print("Below is the overview of the preprocessed data")
     print(df.head())
 
@@ -160,12 +164,28 @@ def check_api_key():
         print("OPENAI_API_KEY is not set.")
 
 if __name__ == "__main__":
-    nltk.download('punkt')
-    nltk.download('punkt_tab')
-    nltk.download('stopwords')
+    #nltk.download('punkt')
+    #nltk.download('stopwords')
 
-    check_api_key()
+    if len(sys.argv) != 2:  # Check if an argument is provided
+        print("Usage: python script.py <preprocess|search>")
+        sys.exit(1)
 
-    model_bm25()
+    argument = sys.argv[1].lower()  # Get the argument and convert it to lowercase
+
+    if argument == "preprocess":
+        raw_data_path = os.path.join(DATA_FOLDER, RAW_DATASET)
+        pp_data_path = os.path.join(DATA_FOLDER, PREPROCESSED_DATASET)
+        preprocess_and_save(raw_data_path, pp_data_path)
+        print(f"Data preprocessed and saved to {pp_data_path}")
+
+    elif argument == "search":
+        check_api_key()  # Ensure API key is set
+        pp_data_path = os.path.join(DATA_FOLDER, PREPROCESSED_DATASET)
+        model_bm25(pp_data_path)
+
+    else:
+        print("Usage: python script.py <preprocess|search>")
+        sys.exit(1)
     
     
