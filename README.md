@@ -115,6 +115,15 @@ python rank_articles.py search
 You will be prompted to input a search term. The script will rank articles based on the BM25 algorithm and display the top results.
 
 
-# Rank Articles with BM25
+# Notes and TODOs
+Search query that works for testing:
+```
+nike air jordan
+```
 
-This project ranks articles using the BM25 algorithm. It provides functionality for preprocessing raw data and performing search queries on the processed dataset.
+## TODOs:
+- Idealy we preprocess the intial dataset and remove all the chinese, japanese, korean characters so we dont have mistakes when plotting 
+- I think we should also prepocess the titles and add them to the body that we search so that we also search the article title
+- Other than that I believe our system works
+
+NOW: we need to do eval and documentation and so on ....
