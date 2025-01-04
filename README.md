@@ -116,14 +116,12 @@ You will be prompted to input a search term. The script will rank articles based
 
 
 # Notes and TODOs
-Search query that works for testing:
+Search query that I used for testing:
 ```
-nike air jordan
+nike jordan
+children helmets bike (this one produces worse results with the expanded query (my personal opinion))
+children should wear helmets
 ```
 
 ## TODOs:
-- Idealy we preprocess the intial dataset and remove all the chinese, japanese, korean characters so we dont have mistakes when plotting 
-- I think we should also prepocess the titles and add them to the body that we search so that we also search the article title
-- Other than that I believe our system works
-
-NOW: we need to do eval and documentation and so on ....
+we need to do eval and documentation and so on ....

@@ -8,7 +8,6 @@ import pandas as pd
 import re
 import os
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
 
 import nltk
 from nltk.corpus import stopwords
@@ -19,9 +18,7 @@ from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
-# Set the font to a CJK-compatible font
-rcParams['font.sans-serif'] = ['SimHei']  # For Chinese characters
-rcParams['axes.unicode_minus'] = False  # To properly display the minus sign
+from utils import generate_html, create_plot, check_api_key
 
 DATA_FOLDER = "data"
 RAW_DATASET = "dataset.jsonl"
@@ -29,13 +26,19 @@ PREPROCESSED_DATASET = "preprocessed_dataset.jsonl"
 
 PLOTS_FOLDER = "plots"
 
+HTML_FOLDER = "html"
+
+"""Extending the Search Term with GPT-4o"""
 def extend_search_term_with_gpt(search_term_string):
     # ChatGPT integration
     
-    #gpt_system_content = "You are a helpful assistant."
+    # ----------- Change this to test different prompts ------------
+    # Sets the behaviour or context of the model
     gpt_system_content = "You find additional synonymes and words to improve a news article search"
+    # Is the user input to the model (like the chat message in ChatGPT)
     gpt_user_content = f"Give me additional words and synonyms that improve a keyword search for {search_term_string}. Just return between 5 and 10 words as a string with no bulletpoints or similar. Return only words no phrases."
-    
+    # ----------- ------------------------------------- ------------
+
     try:
         client = OpenAI()
         completion = client.chat.completions.create(
@@ -57,21 +60,49 @@ def extend_search_term_with_gpt(search_term_string):
 
     return additional_words_string
 
+"""Preprocessing the Data: removing punctuation, make everything lowercase, stopwords, and stemming"""
 def preprocess(content):
-    content = re.sub(r'[^\w\s]', '', content.lower())  # Remove punctuation and lowercase
+    # Remove punctuation and lowercase
+    content = re.sub(r'[^\w\s]', '', content.lower())
+    
+    # Tokenize the content
     tokens = word_tokenize(content)
     tokens = [word for word in tokens if word not in stopwords.words('english')]  # Remove stopwords
     stemmer = PorterStemmer()
-    tokens = [stemmer.stem(word) for word in tokens]  # Stemming
+    # Apply stemming
+    tokens = [stemmer.stem(word) for word in tokens] 
+
     return ' '.join(tokens)
 
+"""Removes Chinese, Japanese, and Korean characters"""
+def remove_CJK_characters(content):
+    # Remove Chinese, Japanese and Korean characters
+    content = re.sub(r'[\u4e00-\u9fff\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff\u1100-\u11ff\uac00-\ud7af]', '', content)
+
+    return content
+
+"""Preprocess the data and save it to a new file"""
 def preprocess_and_save(input_path, output_path):
     print("Preprocessing data...")
     documents = []
     with open(input_path, 'r') as infile:
         for line in infile:
             doc = json.loads(line)
-            doc['processed_text'] = preprocess(doc['content'])  # Add preprocessed text
+            # Step 1: Remove Chinese, Japanese and Korean characters
+            doc['content_abc'] = remove_CJK_characters(doc['content'])
+            doc['title_abc'] = remove_CJK_characters(doc['title'])
+            
+            # Step 2: Preprocess both the cleaned content and title
+            processed_content = preprocess(doc['content_abc'])  # Preprocessed content
+            processed_title = preprocess(doc['title_abc'])  # Preprocessed title
+            
+            # Step 3: Add preprocessed fields to the document
+            doc['processed_content'] = processed_content
+            doc['processed_title'] = processed_title
+            
+            # Step 4: Combine processed content and title
+            doc['processed_combined'] = f"{processed_title} {processed_content}"
+            
             documents.append(doc)
 
     with open(output_path, 'w') as outfile:
@@ -79,6 +110,7 @@ def preprocess_and_save(input_path, output_path):
             json.dump(doc, outfile)
             outfile.write('\n')  # Ensure newline-separated JSON
 
+"""Main function: runs the ranking of the articles using BM25"""
 def model_bm25(preprocessed_file):
     documents = []
     with open(preprocessed_file, 'r') as f:
@@ -90,7 +122,8 @@ def model_bm25(preprocessed_file):
     print("Below is the overview of the preprocessed data")
     print(df.head())
 
-    tokenized_corpus = [doc.split() for doc in df['processed_text']] #tokenize
+    # Get tokenized text (title + content)
+    tokenized_corpus = [doc.split() for doc in df['processed_combined']]
     bm25 = BM25Okapi(tokenized_corpus)
 
     search_term = input("Please enter your search term: ")
@@ -111,7 +144,7 @@ def model_bm25(preprocessed_file):
     # Get top results with expanded query
     top_results_extended_query = df.sort_values(by='bm25_score_extended_query', ascending=False).head(10)
     print("Top results with expanded query:")
-    print(top_results_extended_query[['content', 'bm25_score_extended_query']])
+    print(top_results_extended_query[['title_abc', 'bm25_score_extended_query']])
 
     # Rank documents with simple query
     scores = bm25.get_scores(query_tokens)
@@ -120,11 +153,16 @@ def model_bm25(preprocessed_file):
     # Get top results with simple query
     top_results_simple_query = df.sort_values(by='bm25_score_simple_query', ascending=False).head(10)
     print("Top results with simple query:")
-    print(top_results_simple_query[['content', 'bm25_score_simple_query']])
+    print(top_results_simple_query[['title_abc', 'bm25_score_simple_query']])
 
+    # Generate HTML for top results
+    generate_html(top_results_simple_query, top_results_extended_query, "top_results.html", HTML_FOLDER)
+
+    # Evaluate the search results
     evaluate(df, top_results_extended_query, expanded_query=True)
     evaluate(df, top_results_simple_query, expanded_query=False)
 
+"""Evaluate the search results"""
 def evaluate(df, top_results, expanded_query):
     # Create 'relevant' column based on your condition
     df['relevant'] = [1 if relevance_condition else 0 for relevance_condition in df['content']]
@@ -139,12 +177,8 @@ def evaluate(df, top_results, expanded_query):
 
     print(f"Precision: {precision}, Recall: {recall}, F1-Score: {f1}")
     
-    # Truncate titles to 30 characters
-    top_results['truncated_title'] = top_results['title'].apply(
-        lambda x: x[:30] + '...' if len(x) > 30 else x
-    )
-
     # Define folder and file name
+    PLOTS_FOLDER = "output_plots"
     os.makedirs(PLOTS_FOLDER, exist_ok=True)  # Create the folder if it doesn't exist
     plot_file_name = "top_ranked_results_expanded_query.png" if expanded_query else "top_ranked_results_simple_query.png"
     plot_file_path = os.path.join(PLOTS_FOLDER, plot_file_name)
@@ -153,26 +187,8 @@ def evaluate(df, top_results, expanded_query):
     score_column = "bm25_score_extended_query" if expanded_query else "bm25_score_simple_query"
     query_type = "Extended Query" if expanded_query else "Simple Query"
 
-    # Create the plot
-    plt.figure(figsize=(12, 8))
-    plt.barh(top_results['truncated_title'], top_results[score_column], color='skyblue')
-    plt.xlabel('BM25 Score', fontsize=12)
-    plt.ylabel('Articles', fontsize=12)
-    plt.title(f"Top Ranked Documents ({query_type})", fontsize=14)
-    plt.gca().invert_yaxis()
-
-    plt.tight_layout()
-    plt.savefig(plot_file_path)  # Save the plot to the specified file
-    plt.close()  # Close the plot to free resources
-
-    print(f"Plot saved to {plot_file_path}")
-
-def check_api_key():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if api_key:
-        print(f"OPENAI_API_KEY is set: {api_key[:5]}...")  # Print the first few characters for confirmation
-    else:
-        print("OPENAI_API_KEY is not set.")
+    # Create the plot using the refactored function
+    create_plot(top_results, score_column, query_type, plot_file_path)
 
 if __name__ == "__main__":
     nltk.download('punkt')
