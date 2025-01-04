@@ -1,7 +1,5 @@
 # Article Ranking with ChatGPT extension
 
-## Getting and preparing the Data
-
 ## ChatGPT integration
 Do this in your environment:
 To make the ChatGPT integration work (Mac and Linux):
