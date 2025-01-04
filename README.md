@@ -1,40 +1,4 @@
-# Article Ranking with ChatGPT extension
-
-## ChatGPT integration
-Do this in your environment:
-To make the ChatGPT integration work (Mac and Linux):
-```bash
-export OPENAI_API_KEY="your_api_key_here"
-```
-
-## Using venv (Mac and Linux)
-To create virtual environment the first time use:
-```bash
-python -m venv env
-```
-
-Activate env on windows:
-```bash
-.\env\Scripts\activate
-```
-
-Activate on Mac/Linux:
-```bash
-source env/bin/activate
-```
-
-To deactivate env:
-```bash
-deactivate
-```
-
-To install the requirements.txt run:
-```bash
-pip install -r requirements.txt
-```
-
-
-# Rank Articles with BM25
+# Rank Articles with BM25 and ChatGPT extension
 
 This project ranks articles using the BM25 algorithm. It provides functionality for preprocessing raw data and performing search queries on the processed dataset.
 
@@ -42,7 +6,7 @@ This project ranks articles using the BM25 algorithm. It provides functionality 
 
 ### ChatGPT Integration
 To make the ChatGPT integration work:
-
+ATTENTION: replace >your_api_key_here< with the api key I sent in discord
 #### Mac and Linux
 ```bash
 export OPENAI_API_KEY="your_api_key_here"
