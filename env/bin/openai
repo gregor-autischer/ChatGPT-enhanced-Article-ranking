@@ -1,4 +1,4 @@
-#!/Users/gregor/Documents/GitHub/ChatGPT-enhanced-Article-ranking/env/bin/python
+#!/home/hannah/Desktop/ChatGPT-enhanced-Article-ranking/env/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
@@ -6,4 +6,3 @@ from openai.cli import main
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     sys.exit(main())
-

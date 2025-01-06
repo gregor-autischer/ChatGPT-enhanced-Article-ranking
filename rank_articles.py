@@ -9,6 +9,9 @@ import re
 import os
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+import numpy as np
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -18,7 +21,7 @@ from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
-from utils import generate_html, create_plot, check_api_key
+from utils import generate_html, create_plot, check_api_key, plot_line_comparison, plot_absolute_error_by_index
 
 DATA_FOLDER = "data"
 RAW_DATASET = "dataset.jsonl"
@@ -167,15 +170,27 @@ def evaluate(df, top_results, expanded_query):
     # Create 'relevant' column based on your condition
     df['relevant'] = [1 if relevance_condition else 0 for relevance_condition in df['content']]
 
-    # Binary relevance scores for top results
-    y_true = df['relevant']
-    y_pred = [1 if idx in top_results.index else 0 for idx in df.index]
+    # ground truth relevance score
+    y_true = df['relevant'].values
 
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
+    # Predicted BM25 scores (use the right column)
+    score_column = "bm25_score_extended_query" if expanded_query else "bm25_score_simple_query"
+    y_pred = df[score_column].values
 
-    print(f"Precision: {precision}, Recall: {recall}, F1-Score: {f1}")
+    # compute metrics
+    # add >= 0.5
+    precision = precision_score(y_true, y_pred >= 0.5)
+    recall = recall_score(y_true, y_pred >= 0.5)
+    f1 = f1_score(y_true, y_pred >= 0.5)
+
+    mse = mean_squared_error(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    mape = np.mean(np.abs((y_true - y_pred) / np.maximum(y_true, 1e-10))) * 100 # never divide by zero!
+
+    print(f"Evaluation for {'Extended Query' if expanded_query else 'Simple Query'}:")
+    print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-Score: {f1:.4f}")
+    print(f"MSE: {mse:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, MAPE: {mape:.2f}%")
     
     # Define folder and file name
     PLOTS_FOLDER = "output_plots"
@@ -184,11 +199,16 @@ def evaluate(df, top_results, expanded_query):
     plot_file_path = os.path.join(PLOTS_FOLDER, plot_file_name)
 
     # Use the correct column for bm25_score based on query type
-    score_column = "bm25_score_extended_query" if expanded_query else "bm25_score_simple_query"
     query_type = "Extended Query" if expanded_query else "Simple Query"
 
     # Create the plot using the refactored function
     create_plot(top_results, score_column, query_type, plot_file_path)
+
+    plot_file_path = os.path.join(PLOTS_FOLDER, "plot_line_comparison_expanded_query.png" if expanded_query else "plot_line_comparison_simple_query.png")
+    plot_line_comparison(y_true, y_pred, query_type, plot_file_path)
+
+    plot_file_path = os.path.join(PLOTS_FOLDER, "plot_absolut_error_expanded_query.png" if expanded_query else "plot_absolut_error_simple_query.png")
+    plot_absolute_error_by_index(y_true, y_pred, query_type, plot_file_path)
 
 if __name__ == "__main__":
     nltk.download('punkt')
