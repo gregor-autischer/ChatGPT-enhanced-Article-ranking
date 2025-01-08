@@ -21,7 +21,7 @@ from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import precision_score, recall_score, f1_score
 
-from utils import generate_html, create_plot, check_api_key, plot_line_comparison, plot_absolute_error_by_index
+from utils import generate_html, create_plot, check_api_key, plot_absolute_error_by_index, plot_precision_recall_curve
 
 DATA_FOLDER = "data"
 RAW_DATASET = "dataset.jsonl"
@@ -113,6 +113,17 @@ def preprocess_and_save(input_path, output_path):
             json.dump(doc, outfile)
             outfile.write('\n')  # Ensure newline-separated JSON
 
+"""Determine the relevance"""
+def determine_relevance(df, query, use_extended_query=False):
+    query_terms = set(query.split())  # Tokenize the query
+
+    # Check if any query term appears in the document content
+    def is_relevant(content):
+        content_tokens = set(preprocess(content).split())  # Tokenize the content
+        return 1 if query_terms & content_tokens else 0  # Intersection check
+
+    return df['content'].apply(is_relevant)
+
 """Main function: runs the ranking of the articles using BM25"""
 def model_bm25(preprocessed_file):
     documents = []
@@ -161,15 +172,15 @@ def model_bm25(preprocessed_file):
     # Generate HTML for top results
     generate_html(top_results_simple_query, top_results_extended_query, "top_results.html", HTML_FOLDER)
 
+    # Create 'relevant' column based on your expaned_query
+    df['relevant'] = determine_relevance(df, expanded_query_processed, use_extended_query=False)
+
     # Evaluate the search results
     evaluate(df, top_results_extended_query, expanded_query=True)
     evaluate(df, top_results_simple_query, expanded_query=False)
 
 """Evaluate the search results"""
 def evaluate(df, top_results, expanded_query):
-    # Create 'relevant' column based on your condition
-    df['relevant'] = [1 if relevance_condition else 0 for relevance_condition in df['content']]
-
     # ground truth relevance score
     y_true = df['relevant'].values
 
@@ -178,10 +189,12 @@ def evaluate(df, top_results, expanded_query):
     y_pred = df[score_column].values
 
     # compute metrics
-    # add >= 0.5
     precision = precision_score(y_true, y_pred >= 0.5)
     recall = recall_score(y_true, y_pred >= 0.5)
     f1 = f1_score(y_true, y_pred >= 0.5)
+
+    print("Ground Truth (y_true):", np.unique(y_true))
+    print("Predicted Scores (y_pred):", np.min(y_pred), np.max(y_pred))
 
     mse = mean_squared_error(y_true, y_pred)
     mae = mean_absolute_error(y_true, y_pred)
@@ -204,8 +217,8 @@ def evaluate(df, top_results, expanded_query):
     # Create the plot using the refactored function
     create_plot(top_results, score_column, query_type, plot_file_path)
 
-    plot_file_path = os.path.join(PLOTS_FOLDER, "plot_line_comparison_expanded_query.png" if expanded_query else "plot_line_comparison_simple_query.png")
-    plot_line_comparison(y_true, y_pred, query_type, plot_file_path)
+    plot_file_path = os.path.join(PLOTS_FOLDER, "precisionc_recall_curve_expanded_query.png" if expanded_query else "precisionc_recall_curve_simple_query.png")
+    plot_precision_recall_curve(y_true, y_pred, query_type, plot_file_path)
 
     plot_file_path = os.path.join(PLOTS_FOLDER, "plot_absolut_error_expanded_query.png" if expanded_query else "plot_absolut_error_simple_query.png")
     plot_absolute_error_by_index(y_true, y_pred, query_type, plot_file_path)

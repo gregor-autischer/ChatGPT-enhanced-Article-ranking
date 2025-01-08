@@ -5,6 +5,7 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import precision_recall_curve, roc_curve, auc
 
 def check_api_key():
     api_key = os.getenv("OPENAI_API_KEY")
@@ -143,13 +144,15 @@ def create_plot(top_results, score_column, query_type, plot_file_path):
 
     print(f"Plot saved to {plot_file_path}")
 
-def plot_line_comparison(y_true, y_pred, query_type, plot_path):
-    plt.figure(figsize=(10, 6))
-    plt.plot(y_true, label="Ground Truth", marker='o', linestyle='-', alpha=0.8)
-    plt.plot(y_pred, label="BM25 Predicted Scores", marker='x', linestyle='--', alpha=0.8)
-    plt.xlabel("Document Index")
-    plt.ylabel("Relevance Score")
-    plt.title(f"Ground Truth vs Predicted Relevance ({query_type})")
+def plot_precision_recall_curve(y_true, y_pred, query_type, plot_path):
+    y_pred = (y_pred - np.min(y_pred)) / (np.max(y_pred) - np.min(y_pred))
+    
+    precision, recall, _ = precision_recall_curve(y_true, y_pred)
+    plt.figure(figsize=(8, 6))
+    plt.plot(recall, precision, color='blue', alpha=0.8, label="Precision-Recall Curve")
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title(f"Precision-Recall Curve ({query_type})")
     plt.legend()
     plt.grid(alpha=0.4)
 
@@ -158,12 +161,14 @@ def plot_line_comparison(y_true, y_pred, query_type, plot_path):
 
     print(f"Plot saved to {plot_path}")
 
-def plot_absolute_error_by_index(y_true, y_pred, query_type, plot_path):
-    absolute_errors = np.abs(y_pred - y_true)
+def plot_absolute_error_by_index(y_true, y_pred, query_type, plot_path):    
+    errors = np.abs(y_pred- y_true)
+    errors = (errors - min(errors)) / (max(errors) - min(errors))
     plt.figure(figsize=(10, 6))
-    plt.bar(range(len(absolute_errors)), absolute_errors, color='orange', alpha=0.7)
+    plt.bar(range(len(errors)), errors, color='orange', alpha=0.7)
     plt.xlabel("Document Index")
     plt.ylabel("Absolute Error")
+ 
     plt.title(f"Absolute Errors by Document ({query_type})")
     plt.grid(alpha=0.4)
 
