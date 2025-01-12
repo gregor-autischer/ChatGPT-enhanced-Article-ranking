@@ -1,6 +1,6 @@
 # Rank Articles with BM25 and ChatGPT extension
 
-This project ranks articles using the BM25 algorithm. It provides functionality for preprocessing raw data and performing search queries on the processed dataset.
+This project ranks articles using the BM25 algorithm. It provides functionality for preprocessing raw data and performing search queries on the processed dataset. This project integrates the BM25 ranking algorithm with ChatGPT to improve information retrieval. By leveraging ChatGPT's advanced language processing capabilities, user queries are refined to better capture intent, resulting in more accurate BM25 rankings. The approach focuses on efficiency by using short and targeted prompts, keeping computational demands low. This combination creates a practical and effective solution for search tasks, balancing simplicity with advanced contextual understanding.
 
 ## Prerequisites
 
@@ -75,15 +75,3 @@ python rank_articles.py search
 ```
 
 You will be prompted to input a search term. The script will rank articles based on the BM25 algorithm and display the top results.
-
-
-# Notes and TODOs
-Search query that I used for testing:
-```
-nike jordan
-children helmets bike (this one produces worse results with the expanded query (my personal opinion))
-children should wear helmets
-```
-
-## TODOs:
-we need to do eval and documentation and so on ....
