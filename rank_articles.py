@@ -27,7 +27,7 @@ DATA_FOLDER = "data"
 RAW_DATASET = "dataset.jsonl"
 PREPROCESSED_DATASET = "preprocessed_dataset.jsonl"
 
-PLOTS_FOLDER = "plots"
+PLOTS_FOLDER = "output_plots"
 
 HTML_FOLDER = "html"
 

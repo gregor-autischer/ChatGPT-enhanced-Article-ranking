@@ -74,4 +74,16 @@ To search for articles based on a query, use the following command:
 python rank_articles.py search
 ```
 
-You will be prompted to input a search term. The script will rank articles based on the BM25 algorithm and display the top results.
+You will be prompted to input a search term. The script will rank articles based on the BM25 algorithm and also with a ChatGPT enhanced query and display the top results.
+
+## Where is What?
+Once you run the search, the script will automatically create several files as output. 
+
+### Ranked Articels
+The ranked articels can be found inside the html folder. Open the created top_results.html in your browser to see the ranked articels for both the standard query and the expanded query side by side.
+
+### Plots
+Several plots are also created. Inside the output_plots folder several plots are created. These plots show the absolute error and precision and recall for both the normal and the expanded query. Also there are plots that show the 10 best results with their respective BM25 scores for both the normal and the expanded query.
+
+### Data
+All the necessary data can be found in the data folder. The file dataset.jsonl is our original dataset that we used. This code when preprocessing the data then creates the preprocessed_dataset.jsonl file, which represents the preprocessed data that is then subsequently used in the code.
