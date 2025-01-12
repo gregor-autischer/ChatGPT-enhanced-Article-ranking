@@ -86,4 +86,6 @@ The ranked articels can be found inside the html folder. Open the created top_re
 Several plots are also created. Inside the output_plots folder several plots are created. These plots show the absolute error and precision and recall for both the normal and the expanded query. Also there are plots that show the 10 best results with their respective BM25 scores for both the normal and the expanded query.
 
 ### Data
-All the necessary data can be found in the data folder. The file dataset.jsonl is our original dataset that we used. This code when preprocessing the data then creates the preprocessed_dataset.jsonl file, which represents the preprocessed data that is then subsequently used in the code.
+All the necessary data should be found in the data folder. The file dataset.jsonl is our original dataset that we used. This code when preprocessing the data then creates the preprocessed_dataset.jsonl file, which represents the preprocessed data that is then subsequently used in the code.
+
+The dataset we used can be obtained from: https://research.signal-ai.com/datasets/signal1m.html
