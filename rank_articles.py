@@ -193,17 +193,13 @@ def evaluate(df, top_results, expanded_query):
     recall = recall_score(y_true, y_pred >= 0.5)
     f1 = f1_score(y_true, y_pred >= 0.5)
 
-    print("Ground Truth (y_true):", np.unique(y_true))
-    print("Predicted Scores (y_pred):", np.min(y_pred), np.max(y_pred))
-
     mse = mean_squared_error(y_true, y_pred)
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mse)
-    mape = np.mean(np.abs((y_true - y_pred) / np.maximum(y_true, 1e-10))) * 100 # never divide by zero!
 
     print(f"Evaluation for {'Extended Query' if expanded_query else 'Simple Query'}:")
     print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-Score: {f1:.4f}")
-    print(f"MSE: {mse:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}, MAPE: {mape:.2f}%")
+    print(f"MSE: {mse:.4f}, MAE: {mae:.4f}, RMSE: {rmse:.4f}")
     
     # Define folder and file name
     PLOTS_FOLDER = "output_plots"
